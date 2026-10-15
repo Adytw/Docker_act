@@ -1,0 +1,7 @@
+{
+  "name": "app-clima",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
