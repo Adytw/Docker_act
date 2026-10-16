@@ -1,20 +1,123 @@
-<ion-header [translucent]="true">
+<ion-header class="app-header">
   <ion-toolbar>
-    <ion-title>
-      Blank
-    </ion-title>
+    <ion-title><span class="brand-mark">☼</span> cielo</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Blank</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="weather-content">
+  <main class="weather-page">
+    <section class="welcome">
+      <div class="welcome-copy">
+        <p class="eyebrow">EL TIEMPO, DONDE QUIERAS</p>
+        <h1>Un vistazo al<br /><span>cielo de hoy.</span></h1>
+        <p>Encuentra una ciudad y descubre cómo está el clima ahora.</p>
+      </div>
+      <div class="sun-art" aria-hidden="true">☀</div>
+    </section>
 
-  <div id="container">
-    <strong>Ready to create an app?</strong>
-    <p>Start with Ionic <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
-  </div>
+    <section class="search-panel" aria-label="Buscar ciudad">
+      <form class="search-form" (ngSubmit)="searchCities()">
+        <ion-searchbar
+          name="city"
+          [(ngModel)]="cityQuery"
+          (ngModelChange)="onCityQueryChange($event)"
+          placeholder="¿Qué ciudad buscas?"
+          aria-label="Nombre de la ciudad"
+          enterkeyhint="search"
+          [debounce]="0"
+        ></ion-searchbar>
+        <ion-button type="submit">
+          @if (searchingCities) {
+            <ion-spinner name="crescent" aria-label="Buscando"></ion-spinner>
+          } @else {
+            Buscar
+          }
+        </ion-button>
+      </form>
+
+      @if (searchingCities) {
+        <p class="search-hint"><ion-spinner name="dots"></ion-spinner> Buscando ciudades…</p>
+      } @else if (cities.length > 0) {
+        <p class="search-hint">Elige una ciudad para consultar su clima</p>
+      } @else if (cityQuery.trim().length > 0 && cityQuery.trim().length < 2) {
+        <p class="search-hint">Escribe al menos 2 letras para buscar</p>
+      }
+
+      @if (errorMessage) {
+        <p class="message error-message" role="alert">{{ errorMessage }}</p>
+      }
+
+      @if (searched && cities.length === 0 && !searchingCities && !errorMessage) {
+        <p class="message">No encontramos ciudades con ese nombre. Intenta con otra búsqueda.</p>
+      }
+
+      @if (cities.length > 0) {
+        <section class="city-results" aria-label="Resultados de ciudades">
+          @for (city of cities; track city.id) {
+            <button
+              class="city-option"
+              type="button"
+              [disabled]="loadingWeather"
+              (click)="loadWeather(city)"
+            >
+              <span class="location-icon" aria-hidden="true">⌖</span>
+              <span class="city-copy">
+                <strong>{{ city.name }}</strong>
+                <span>{{ city.admin1 ? city.admin1 + ', ' : '' }}{{ city.country }}</span>
+              </span>
+              <span class="city-arrow" aria-hidden="true">↗</span>
+            </button>
+          }
+        </section>
+      }
+    </section>
+
+    @if (loadingWeather && selectedCity) {
+      <section class="weather-loading" aria-live="polite">
+        <ion-spinner name="crescent"></ion-spinner>
+        <span>Buscando el clima de {{ selectedCity.name }}…</span>
+      </section>
+    }
+
+    @if (weather && selectedCity) {
+      <section class="weather-result" aria-live="polite">
+        <div class="result-heading">
+          <div>
+            <p class="eyebrow">AHORA MISMO</p>
+            <h2>{{ selectedCity.name }}<span>{{ selectedCity.country ? ', ' + selectedCity.country : '' }}</span></h2>
+          </div>
+          <span class="weather-symbol" aria-label="{{ weatherDescription(weather.current.weather_code) }}">
+            {{ weatherEmoji(weather.current.weather_code) }}
+          </span>
+        </div>
+
+        <div class="weather-hero">
+          <div class="temperature">{{ weather.current.temperature_2m }}<span>°</span></div>
+          <div class="condition">
+            <strong>{{ weatherDescription(weather.current.weather_code) }}</strong>
+            <span>Sensación de {{ weather.current.apparent_temperature }}°</span>
+          </div>
+        </div>
+
+        <div class="weather-details">
+          <article class="detail-tile">
+            <span class="detail-icon" aria-hidden="true">💧</span>
+            <span class="detail-label">Humedad</span>
+            <strong>{{ weather.current.relative_humidity_2m }}<small>%</small></strong>
+          </article>
+          <article class="detail-tile">
+            <span class="detail-icon" aria-hidden="true">🌬️</span>
+            <span class="detail-label">Viento</span>
+            <strong>{{ weather.current.wind_speed_10m }}<small> km/h</small></strong>
+          </article>
+          <article class="detail-tile">
+            <span class="detail-icon" aria-hidden="true">🌧️</span>
+            <span class="detail-label">Lluvia</span>
+            <strong>{{ weather.current.precipitation }}<small> mm</small></strong>
+          </article>
+        </div>
+        <p class="updated-time">Actualizado: {{ weather.current.time.replace('T', ' ') }}</p>
+      </section>
+    }
+  </main>
 </ion-content>
